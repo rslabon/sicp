@@ -46,3 +46,46 @@
 		  (print-iter (cdr pair))))
 	   queue)))
   (print-iter (front-ptr queue)))
+
+;ex 3.22
+(define (make-queue)
+  (let ((front-ptr `())
+	(rear-ptr `()))
+    (define (empty?)
+      (null? front-ptr))
+    (define (insert! item)
+      (cond ((empty?)
+	     (set! front-ptr (cons item `()))
+	     (set! rear-ptr front-ptr)
+	     front-ptr)
+	    (else
+	     (set-cdr! rear-ptr (cons item `()))
+	     (set! rear-ptr (cdr rear-ptr))
+	     front-ptr)))
+    (define (delete!)
+      (cond ((empty?)
+	     (error "queue is empty!"))
+	    (else
+	     (set! front-ptr (cdr front-ptr))
+	     front-ptr)))
+    (define (dispatch m)
+      (cond ((eq? m 'empty?) empty?)
+	    ((eq? m 'insert!) insert!)
+	    ((eq? m 'front-ptr) front-ptr)
+	    ((eq? m 'rear-ptr) rear-ptr)
+	    ((eq? m 'delete!) delete!)
+	    (else
+	     (error "Unknown invocation!"))))
+    dispatch))
+
+;(define q1 (make-queue))
+;((q1 'empty?))
+;((q1 'insert!) 'a)
+;((q1 'insert!) 'b)
+;((q1 'insert!) 'c)
+;((q1 'delete!))
+;((q1 'delete!))
+
+
+
+
