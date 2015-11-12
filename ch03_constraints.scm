@@ -166,8 +166,38 @@
 (define F (make-connector))
 (probe "Fahrenheit temp" F)
 (celsius-fahrenheit-converter C F)
-(set-value! C 100 'user)
-(set-value! F 100 'user)
+;(set-value! C 100 'user)
+;(set-value! F 100 'user)
+
+;ex 3.33
+(define (averager a b c)
+  (let ((u (make-connector))
+        (v (make-connector)))
+    (adder a b u)
+    (multiplier c v u)
+    (constant 2 v)
+    'ok))
+
+(define A (make-connector))
+(probe "A" C)
+(define B (make-connector))
+(probe "B" B)
+(define C (make-connector))
+(probe "C" C)
+;(averager A B C)
+;(set-value! A 1 'user)
+;(set-value! B 2 'user)
+
+;ex 3.34
+(define (squarer a b)
+  (multiplier a a b))
+
+(squarer A B)
+;(set-value! A 5 'user)
+;(set-value! B 25 'user)
+
+;ex 3.35
+  
 
 
 
