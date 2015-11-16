@@ -1,3 +1,8 @@
+(define (assert-equal a b)
+  (if (not (eq? a b))
+      (begin (display "error - not equal: ") (display "a=") (display a) (display " != ") (display " b=") (display b))))
+
+
 (define (constant value connector)
   (define (me request)
     (display "Unknown request -- CONSTANT"))
@@ -44,7 +49,7 @@
                (if informant #t #f))
               ((eq? request 'value) value)
               ((eq? request 'set-value!) set-my-value)
-              ((eq? request 'forgot) forgot-my-value)
+              ((eq? request 'forget) forgot-my-value)
               ((eq? request 'connect) connect)
               (else (display "UNKNOWN OPERATION -- CONNECTOR"))))
       me))
@@ -179,7 +184,7 @@
     'ok))
 
 (define A (make-connector))
-(probe "A" C)
+(probe "A" A)
 (define B (make-connector))
 (probe "B" B)
 (define C (make-connector))
@@ -189,17 +194,92 @@
 ;(set-value! B 2 'user)
 
 ;ex 3.34
-(define (squarer a b)
-  (multiplier a a b))
+;(define (squarer a b)
+;  (multiplier a a b))
 
-(squarer A B)
+;(squarer A B)
 ;(set-value! A 5 'user)
 ;(set-value! B 25 'user)
 
 ;ex 3.35
-  
+(define (squarer a b)
+  (define (process-new-value)
+    (if (has-value? b)
+        (if (< (get-value b) 0)
+            (error "square less than 0 -- SQUARER" (get-value b))
+            (set-value! a (sqrt (get-value b)) me))
+        (set-value! b (expt (get-value a) 2) me)))
+  (define (process-forget-value) 
+    (forget-value! a me)
+    (forget-value! b me)
+    (process-new-value))
+  (define (me request)
+    (cond ((eq? request 'I-have-a-value)
+           (process-new-value))
+          ((eq? request 'I-lost-my-value)
+           (process-forget-value))
+          (else
+           (display "Unknown request -- SQUARER"))))
+  (connect a me)
+  (connect b me)
+  me)
 
+;(squarer A B)
+;(set-value! A 5 'user)
+;(set-value! B 25 'user)
 
+;ex 3.37
+(define (c+ x y)
+  (let ((z (make-connector)))
+    (adder x y z)
+    z))
 
+(define A (make-connector))
+(probe "A" A)
+(define B (make-connector))
+(probe "B" B)
+(set-value! A 5 'user)
+(set-value! B 7 'user)
+(assert-equal (get-value (c+ A B)) 12)
 
-            
+(define (c* x y)
+  (let ((z (make-connector)))
+    (multiplier x y z)
+    z))
+
+(define A (make-connector))
+(probe "A" A)
+(define B (make-connector))
+(probe "B" B)
+(set-value! A 5 'user)
+(set-value! B 7 'user)
+(assert-equal (get-value (c* A B)) 35)
+
+(define (cv x)
+  (let ((z (make-connector)))
+    (constant x z)
+    z))
+(assert-equal (get-value (cv 18)) 18)  
+
+(define (c/ x y)
+  (let ((z (make-connector)))
+    (multiplier z y x)
+    z))
+
+(define A (make-connector))
+(probe "A" A)
+(define B (make-connector))
+(probe "B" B)
+(set-value! A 12 'user)
+(set-value! B 3 'user)
+(assert-equal (get-value (c/ A B)) 4) 
+
+(define (celsius-fahrenheit-converter x)
+  (c+ (c* (c/ (cv 9) (cv 5))
+          x)
+      (cv 32)))
+(define C (make-connector))
+(define F (celsius-fahrenheit-converter C))
+(probe "C" C)
+(probe "F" F)
+(set-value! F 212 'user)
