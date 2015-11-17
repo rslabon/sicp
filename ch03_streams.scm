@@ -19,7 +19,7 @@
 		      (stream-filter pred (stream-cdr stream))))
 	(else (stream-filter pred (stream-cdr? stream)))))
 
-(define (stream-list . items)
+(define (stream-list items)
   (if (null? items)
       the-empty-stream
       (cons-stream (car items) (stream-list (cdr items)))))
@@ -40,9 +40,9 @@
        (apply stream-map
               (cons proc (map stream-cdr argstreams))))))
 
-(define s1 (stream-list 1 2 3))
-(define s2 (stream-list 10 20 30))
-(define s3 (stream-list 100 200 300))
+(define s1 (stream-list (list 1 2 3)))
+(define s2 (stream-list (list 10 20 30)))
+(define s3 (stream-list (list 100 200 300)))
 
 (define s4 (stream-map + s1 s2 s3))
 (display-stream s4)
