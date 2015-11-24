@@ -109,8 +109,28 @@
                (delay (cons-stream 1
                                    (delay (add-streams (stream-cdr fib)
                                                        fib))))))
-(stream-ref fib 5)
+;(stream-ref fib 5)
 
+;ex 3.53
+(define s (cons-stream 1 (delay (add-streams s s))))
+;(stream-ref s 2)
 
+;ex 3.54
+(define (mul-streams s1 s2)
+  (stream-map * s1 s2))
 
+(define factorial (cons-stream 1 (delay (mul-streams (integers-start-from 2) factorial))))
+;(stream-ref factorial 4) ;120
 
+;ex 3.55
+
+(define (partial-sums stream)
+  (cons-stream (stream-car stream)
+               (delay (add-streams (stream-cdr stream) (partial-sums stream)))))
+
+(define p (partial-sums integers))
+(stream-ref p 0)
+(stream-ref p 1)
+(stream-ref p 2)
+(stream-ref p 3)
+(stream-ref p 4)
