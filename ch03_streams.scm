@@ -25,6 +25,12 @@
 (define (display-stream stream)
   (stream-for-each display-line stream))
 
+(define (n-display-stream stream n)
+  (begin (display-line (stream-car stream))
+         (if (not (= n 0)) (n-display-stream (stream-cdr stream) (- n 1)))))
+  
+      
+
 (define (display-line x)
   (newline)
   (display x))
@@ -46,6 +52,10 @@
       the-empty-stream
       (cons-stream low
 		   (delay (stream-enumerate-interval (+ low 1) high)))))
+
+(define (stream-scale stream factor)
+  (cons-stream (* factor (stream-car stream))
+               (delay (stream-scale (stream-cdr stream) factor))))
 
 ;ex 3.50
 
@@ -128,9 +138,55 @@
   (cons-stream (stream-car stream)
                (delay (add-streams (stream-cdr stream) (partial-sums stream)))))
 
-(define p (partial-sums integers))
-(stream-ref p 0)
-(stream-ref p 1)
-(stream-ref p 2)
-(stream-ref p 3)
-(stream-ref p 4)
+;(define p (partial-sums integers))
+;(stream-ref p 0)
+;(stream-ref p 1)
+;(stream-ref p 2)
+;(stream-ref p 3)
+;(stream-ref p 4)
+
+;ex 3.56
+
+(define (merge s1 s2)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else (let ((s1-car (stream-car s1))
+                    (s2-car (stream-car s2)))
+                (cond ((= s1-car s2-car) (cons-stream s2-car (delay (merge (stream-cdr s1) (stream-cdr s2)))))
+                      ((< s1-car s2-car) (cons-stream s1-car (delay (merge (stream-cdr s1) s2))))
+                      (else (cons-stream s2-car (delay (merge s1 (stream-cdr s2))))))))))
+
+;(define S (cons-stream 1 (delay (merge (merge (stream-scale S 2) (stream-scale S 3)) (stream-scale S 5)))))
+
+;(n-display-stream S 20)
+
+;ex 3.58
+
+(define (expand num den radix)
+  (cons-stream
+   (quotient (* num radix) den)
+   (delay (expand (remainder (* num radix) den) den radix))))
+                
+;(define x (expand 1 7 10));1/7 https://en.wikipedia.org/wiki/142857_(number)
+;(n-display-stream x 7)
+;(define x (expand 3 8 10));3/8
+;(n-display-stream x 7)
+
+;ex 3.59
+
+(define (integrate-series stream)
+  (define (iter stream n)
+    (cons-stream (* (/ 1 n) (stream-car stream))
+                 (delay (iter (stream-cdr stream) (+ n 1)))))
+  (iter stream 1))
+
+(define exp-series
+  (cons-stream 1 (delay (integrate-series exp-series))))
+
+(define cosine-series
+  (cons-stream 1 (delay (integrate-series sine-series))))
+(define sine-series
+  (cons-stream 0 (delay (stream-map (lambda(x) (* x -1)) (integrate-series cosine-series)))))
+
+
+(n-display-stream sine-series 10)
