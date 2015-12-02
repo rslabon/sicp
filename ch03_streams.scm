@@ -189,4 +189,15 @@
   (cons-stream 0 (delay (stream-map (lambda(x) (* x -1)) (integrate-series cosine-series)))))
 
 
-(n-display-stream sine-series 10)
+;(n-display-stream sine-series 10)
+
+;ex 3.60
+
+(define (mul-series s1 s2)
+  (cons-stream (* (stream-car s1) (stream-car s2))
+               (delay (add-streams 
+                       (stream-scale (stream-cdr s1) (stream-car s2))
+                       (mul-series s1 (stream-cdr s2))))))
+
+(define r (add-streams (mul-series sine-series sine-series) (mul-series cosine-series cosine-series)))
+(n-display-stream r 10)
