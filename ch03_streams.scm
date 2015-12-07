@@ -201,3 +201,34 @@
 
 (define r (add-streams (mul-series sine-series sine-series) (mul-series cosine-series cosine-series)))
 ;(n-display-stream r 3)
+
+;ex 3.61
+
+(define (invert-unit-series series)
+  (cons-stream 1
+               (delay (mul-series (stream-scale (stream-cdr series) -1) (invert-unit-series series)))))
+
+(define invert-exp-series (invert-unit-series exp-series))
+
+(define (acc-stream init proc stream n)
+  (define (iter acc i s)
+    (if (= n i)
+        acc
+        (iter (proc acc (stream-car s)) (+ i 1) (stream-cdr s))))
+  (iter init 0 stream))
+
+;(exact->inexact (acc-stream 0 + invert-exp-series 10)) ; 1/e ~= 0.36787
+
+;ex 3.62
+
+(define (div-series s1 s2)
+   (let ((car-s1 (stream-car s1))
+         (car-s2 (stream-car s2)))
+     (if (= car-s2 0)
+         (display "error - 0 div")
+         (cons-stream (/ car-s1 car-s2)
+                      (delay (mul-series (stream-cdr s1) (invert-unit-series s2)))))))
+
+(define tg-series (div-series sine-series cosine-series))
+(n-display-stream tg-series 10)                 
+        
