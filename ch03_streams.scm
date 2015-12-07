@@ -229,6 +229,71 @@
          (cons-stream (/ car-s1 car-s2)
                       (delay (mul-series (stream-cdr s1) (invert-unit-series s2)))))))
 
-(define tg-series (div-series sine-series cosine-series))
-(n-display-stream tg-series 10)                 
+;(define tg-series (div-series sine-series cosine-series))
+;(n-display-stream tg-series 10)   
+
+;3.5.3  Exploiting the Stream Paradigm
+
+(define (average a b)
+  (/ (+ a b) 2))
+
+(define (sqrt-improv guess x)
+  (average guess (/ x guess)))
         
+(define (sqrt-stream x)
+  (define guesses
+    (cons-stream 1.0
+                 (delay (stream-map (lambda(guess) (sqrt-improv guess x))
+                                    guesses))))
+  guesses)
+
+(define (square a)
+  (* a a))
+
+(define (euler-transform s)
+  (let ((s0 (stream-ref s 0))           ; Sn-1
+        (s1 (stream-ref s 1))           ; Sn
+        (s2 (stream-ref s 2)))          ; Sn+1
+    (cons-stream (- s2 (/ (square (- s2 s1))
+                          (+ s0 (* -2 s1) s2)))
+                 (delay (euler-transform (stream-cdr s))))))
+
+(define (make-tableau transform s)
+  (cons-stream s
+               (delay (make-tableau transform
+                             (transform s)))))
+
+(define (accelerated-sequence transform s)
+  (stream-map stream-car
+              (make-tableau transform s)))
+
+;(n-display-stream (accelerated-sequence euler-transform (sqrt-stream 2)) 5)
+
+;ex 3.64
+
+(define (stream-limit stream tolerance)
+  (let ((s0 (stream-ref stream 0))
+        (s1 (stream-ref stream 1)))
+    (if (< (abs (- s1 s0)) tolerance)
+        s1
+        (stream-limit (stream-cdr stream) tolerance))))
+
+(define (my-sqrt x tolerance)
+  (stream-limit (sqrt-stream x) tolerance))
+
+;(my-sqrt 2 0.001)
+
+;ex 3.65
+
+(define (ln2-summands n)
+    (cons-stream (/ 1.0 n)
+                 (delay (stream-map - (ln2-summands (+ n 1))))))
+
+(define ln2 (partial-sums (ln2-summands 1)))
+
+; ln2 ~= 0.693147180559945309417232121458
+
+;(n-display-stream ln2 600); 0.6939784351809084 - still not yet
+
+(n-display-stream (accelerated-sequence euler-transform ln2) 10)
+            
