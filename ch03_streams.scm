@@ -295,5 +295,43 @@
 
 ;(n-display-stream ln2 600); 0.6939784351809084 - still not yet
 
-(n-display-stream (accelerated-sequence euler-transform ln2) 10)
+;(n-display-stream (accelerated-sequence euler-transform ln2) 10)
+
+; INFINITE STREAMS OF PAIRS
+
+(define (interleave s1 s2)
+  (if (stream-null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (delay (interleave s2 (stream-cdr s1))))))
+
+(define (pairs s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (delay (interleave
+           (stream-map (lambda (x) (list (stream-car s) x))
+                       (stream-cdr t))
+           (pairs (stream-cdr s) (stream-cdr t))))))
+
+; ex 3.67  
+(define x (interleave (pairs integers integers)
+                      (stream-map (lambda (x) 
+                        (if (not (= (car x) (cadr x)))
+                            (list (cadr x) (car x))
+                            (list (car x) (cadr x))
+                            ))
+                        (stream-filter (lambda(x) (not (= (car x) (cadr x)))) (pairs integers integers)))))
+
+;(n-display-stream x 10)
+
+; ex 3.68
+;(define (pairs s t)
+;  (interleave
+;   (stream-map (lambda (x) (list (stream-car s) x)) 
+;                t)
+;   (pairs (stream-cdr s) (stream-cdr t))));hangs because of no delay in the line
+
+; ex 3.69
+
+
             
