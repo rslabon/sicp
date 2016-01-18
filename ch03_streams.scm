@@ -333,20 +333,21 @@
 
 ; ex 3.69
 (define (triples s1 s2 s3)
-  (cons-stream
+   (cons-stream
    (list (stream-car s1) (stream-car s2) (stream-car s3))
    (delay (interleave
-           (stream-map (lambda (x) (list (stream-car s1) (stream-car s2) x))
-                       (stream-cdr s3))
+           (stream-map (lambda (x) (cons (stream-car s1) x)) (stream-cdr (pairs s2 s3)))
            (triples (stream-cdr s1) (stream-cdr s2) (stream-cdr s3))))))
 
 (define (pythagorean-filter x) 
-    (and 
-     (or (= (car x) (cadr x)) (< (car x) (cadr x)))
-     #t));(= (+ (square (car x)) (square (cadr x))) (square (caddr x)))))
+     (= (+ (square (car x)) (square (cadr x))) (square (caddr x))))
  
 (define pythagorean-triples (stream-filter pythagorean-filter (triples integers integers integers)))
 
-(n-display-stream pythagorean-triples 100)
+(n-display-stream pythagorean-triples 5)
+
+;(n-display-stream (triples integers integers integers) 5000)
+
+
                   
             
