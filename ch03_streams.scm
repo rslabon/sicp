@@ -413,3 +413,25 @@
   (generate sum-of-cube-pairs 0 (list 0 0)))
   
 ;(n-display-stream (ramanujan-numbers) 100)
+
+;ex 3.72
+
+(define (sum-of-squares p)
+    (let ((i (car p))
+          (j (cadr p)))
+      (+ (* i i) (* j j))))
+
+(define sum-of-squares-pairs (weighted-pairs sum-of-squares integers integers))
+
+(define (the-numbers)
+  (define (generate a-pairs prev-sum prev-pair)
+    (let ((current-sum (sum-of-squares (stream-car a-pairs))))
+      (if (= prev-sum current-sum)
+          (cons-stream (list current-sum prev-pair (stream-car a-pairs))
+                       (delay (generate (stream-cdr a-pairs) current-sum (stream-car a-pairs))))
+          (generate (stream-cdr a-pairs) current-sum (stream-car a-pairs)))))
+  (generate sum-of-squares-pairs 0 (list 0 0)))
+
+;(n-display-stream (stream-map (lambda(p) (list (sum-of-squares p) p)) sum-of-squares-pairs) 1000)
+
+(n-display-stream (the-numbers) 1000)
