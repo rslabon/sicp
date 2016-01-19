@@ -342,12 +342,54 @@
 (define (pythagorean-filter x) 
      (= (+ (square (car x)) (square (cadr x))) (square (caddr x))))
  
-(define pythagorean-triples (stream-filter pythagorean-filter (triples integers integers integers)))
+;(define pythagorean-triples (stream-filter pythagorean-filter (triples integers integers integers)))
 
-(n-display-stream pythagorean-triples 5)
+;(n-display-stream pythagorean-triples 5)
 
-;(n-display-stream (triples integers integers integers) 5000)
+;ex 3.70
 
+(define (merge-weighted weighted s1 s2)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+         (let ((s1car (stream-car s1))
+               (s2car (stream-car s2)))
+           (cond ((< (weighted s1car s2car) 0)
+                  (cons-stream s1car (delay (merge-weighted weighted (stream-cdr s1) s2))))
+                 ((> (weighted s1car s2car) 0)
+                  (cons-stream s2car (delay (merge-weighted weighted s1 (stream-cdr s2)))))
+                 (else
+                  (cons-stream s1car
+                               (delay (merge-weighted weighted (stream-cdr s1)
+                                      (stream-cdr s2))))))))))
 
+(define (weighted-pairs weighted s t)
+  (cons-stream
+   (list (stream-car s) (stream-car t))
+   (delay (merge-weighted weighted
+           (stream-map (lambda (x) (list (stream-car s) x))
+                       (stream-cdr t))
+           (pairs (stream-cdr s) (stream-cdr t))))))
                   
-            
+;a. the stream of all pairs of positive integers (i,j) with i < j ordered according to the sum i + j
+
+(define (sum-pair-cmp-a p1 p2)
+  (- (apply + p1) (apply + p2)))
+
+;(define sum-i-j-a (weighted-pairs sum-pair-cmp-a integers integers))
+;(n-display-stream sum-i-j-a 10)
+
+;b. the stream of all pairs of positive integers (i,j) with i < j, where neither i nor j is divisible by 2, 3, or 5, and the pairs are ordered according to the sum 2 i + 3 j + 5 i j.
+
+(define (sum-pair-cmp-b p1 p2)
+  (define (sum i j)
+    (+ (* 2 i) (* 3 j) (* 5 i j)))
+  (- (sum (car p1) (cadr p1)) (sum (car p2) (cadr p2))))
+
+(define (not-divisible number x)
+  (not (= 0 (modulo number x))))
+
+(define not-divisible-integers-by-2-3-5 (stream-filter (lambda (x) (and (not-divisible x 2) (not-divisible x 3) (not-divisible x 5))) integers))
+
+(define sum-i-j-b (weighted-pairs sum-pair-cmp-b not-divisible-integers-by-2-3-5 not-divisible-integers-by-2-3-5))
+(n-display-stream sum-i-j-b 10)
