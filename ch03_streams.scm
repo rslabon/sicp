@@ -354,14 +354,14 @@
         (else
          (let ((s1car (stream-car s1))
                (s2car (stream-car s2)))
-           (cond ((< (weighted s1car s2car) 0)
+           (cond ((< (weighted s1car) (weighted s2car))
                   (cons-stream s1car (delay (merge-weighted weighted (stream-cdr s1) s2))))
-                 ((> (weighted s1car s2car) 0)
+                 ((> (weighted s1car) (weighted s2car))
                   (cons-stream s2car (delay (merge-weighted weighted s1 (stream-cdr s2)))))
                  (else
                   (cons-stream s1car
                                (delay (merge-weighted weighted (stream-cdr s1)
-                                      (stream-cdr s2))))))))))
+                                      s2)))))))))
 
 (define (weighted-pairs weighted s t)
   (cons-stream
@@ -369,22 +369,22 @@
    (delay (merge-weighted weighted
            (stream-map (lambda (x) (list (stream-car s) x))
                        (stream-cdr t))
-           (pairs (stream-cdr s) (stream-cdr t))))))
+           (weighted-pairs weighted (stream-cdr s) (stream-cdr t))))))
                   
 ;a. the stream of all pairs of positive integers (i,j) with i < j ordered according to the sum i + j
 
-(define (sum-pair-cmp-a p1 p2)
-  (- (apply + p1) (apply + p2)))
+(define (sum-pair-cmp-a p)
+  (apply + p))
 
 (define sum-i-j-a (weighted-pairs sum-pair-cmp-a integers integers))
 ;(n-display-stream sum-i-j-a 10)
 
 ;b. the stream of all pairs of positive integers (i,j) with i < j, where neither i nor j is divisible by 2, 3, or 5, and the pairs are ordered according to the sum 2 i + 3 j + 5 i j.
 
-(define (sum-pair-cmp-b p1 p2)
-  (define (sum i j)
-    (+ (* 2 i) (* 3 j) (* 5 i j)))
-  (- (sum (car p1) (cadr p1)) (sum (car p2) (cadr p2))))
+(define (sum-pair-cmp-b p)
+  (let ((i (car p))
+        (j (cadr p)))
+    (+ (* 2 i) (* 3 j) (* 5 i j))))
 
 (define (not-divisible number x)
   (not (= 0 (modulo number x))))
@@ -396,18 +396,20 @@
 
 ;ex 3.71
 
-(define (ramanujan-numbers n)
-  (define (sum-of-cube pair)
-    (define (sum i j)
-      (+ (expt i 3) (expt j 3)))
-    (sum (car pair) (cadr pair)))
-  (define (cmp-sum-pair-of-cubes p1 p2)
-    (- (sum-of-cube p1) (sum-of-cube p2)))
-  (define (find-next pairs-stream)
-    (let ((first-pair (stream-car (stream-filter (lambda (p) (= n (sum-of-cube p))) pairs-stream))))
-      (cons-stream 
-       first-pair
-       (delay (find-next (stream-filter (lambda (p) (and (not (= (car first-pair) (car p))) (not (= (cadr first-pair) (cadr p))))) pairs-stream))))))
-  (find-next (weighted-pairs cmp-sum-pair-of-cubes integers integers)))
+(define (sum-of-cube p)
+    (let ((i (car p))
+          (j (cadr p)))
+      (+ (* i i i) (* j j j))))
 
-(n-display-stream (ramanujan-numbers 1729) 1)
+(define sum-of-cube-pairs (weighted-pairs sum-of-cube integers integers))
+
+(define (ramanujan-numbers)
+  (define (generate a-pairs prev-sum prev-pair)
+    (let ((current-sum (sum-of-cube (stream-car a-pairs))))
+      (if (= prev-sum current-sum)
+          (cons-stream (list current-sum prev-pair (stream-car a-pairs))
+                       (delay (generate (stream-cdr a-pairs) current-sum (stream-car a-pairs))))
+          (generate (stream-cdr a-pairs) current-sum (stream-car a-pairs)))))
+  (generate sum-of-cube-pairs 0 (list 0 0)))
+  
+;(n-display-stream (ramanujan-numbers) 100)
