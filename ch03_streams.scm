@@ -435,4 +435,15 @@
              (generate (stream-cdr a-pairs) current-sum (list (stream-car a-pairs)))))))
   (generate sum-of-squares-pairs 0 `()))
 
-(n-display-stream (the-numbers) 100)
+;(n-display-stream (the-numbers) 100)
+
+; STREAMS AS SIGNALS
+
+(define (intergral intergrend initial-value dt)
+  (define int (cons-stream initial-value
+                           (delay (add-streams (stream-scale intergrend dt)
+                                               int))))
+  int)
+
+(define x (intergral integers 3 2))
+(n-display-stream x 10)
