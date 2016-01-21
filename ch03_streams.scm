@@ -424,14 +424,15 @@
 (define sum-of-squares-pairs (weighted-pairs sum-of-squares integers integers))
 
 (define (the-numbers)
-  (define (generate a-pairs prev-sum prev-pair)
+  (define (generate a-pairs prev-sum prev-pairs)
     (let ((current-sum (sum-of-squares (stream-car a-pairs))))
-      (if (= prev-sum current-sum)
-          (cons-stream (list current-sum prev-pair (stream-car a-pairs))
-                       (delay (generate (stream-cdr a-pairs) current-sum (stream-car a-pairs))))
-          (generate (stream-cdr a-pairs) current-sum (stream-car a-pairs)))))
-  (generate sum-of-squares-pairs 0 (list 0 0)))
+      (cond ((= 3 (length prev-pairs))
+             (cons-stream (list prev-sum prev-pairs)
+                          (delay (generate a-pairs 0 `()))))
+             ((= prev-sum current-sum) 
+              (generate (stream-cdr a-pairs) current-sum (cons (stream-car a-pairs) prev-pairs)))
+            (else 
+             (generate (stream-cdr a-pairs) current-sum (list (stream-car a-pairs)))))))
+  (generate sum-of-squares-pairs 0 `()))
 
-;(n-display-stream (stream-map (lambda(p) (list (sum-of-squares p) p)) sum-of-squares-pairs) 1000)
-
-(n-display-stream (the-numbers) 1000)
+(n-display-stream (the-numbers) 100)
