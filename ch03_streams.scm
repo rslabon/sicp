@@ -485,3 +485,24 @@
 
 (define sense-data (stream-list (list 1 2 1.5 1 0.5 -0.1 -2 -3 -2 -0.5 0.2 3 4)))
 (define zero-crossings (make-zero-crossings sense-data 0 0))
+;(n-display-stream zero-crossings 12)
+;ex 3.76
+
+(define (smooth stream) 
+  (define (do-smooth s last-value)
+       (cons-stream (/ (+ (stream-car s) last-value) 2)
+                    (delay (do-smooth (stream-cdr s) (stream-car s)))))
+  (do-smooth (stream-cdr s) (stream-car s)))
+
+(define (make-zero-crossings input-stream filter)
+  (define filtered (filter input-stream))
+    (cons-stream (sign-change-detector (stream-car filtered) (stream-car (stream-cdr filtered)))
+                 (delay (make-zero-crossings (stream-cdr (stream-cdr filtered))
+                                             filter))))
+
+(define avg-sense-data (smooth sense-data))
+;(define zero-crossings (make-zero-crossings sense-data smooth))
+
+(n-display-stream avg-sense-data 8)
+;(newline)
+;(n-display-stream zero-crossings 12)
