@@ -445,5 +445,31 @@
                                                int))))
   int)
 
-(define x (intergral integers 3 2))
-(n-display-stream x 10)
+;ex 3.73
+
+(define (RC R C dt)
+  (lambda (i v0)
+    (add-streams (intergral (stream-scal i (/ 1 C)) v0 dt) (stream-scal i R))))
+
+(define RC1 (RC 5 1 0.5))
+
+;ex 3.74
+
+(define (sign-change-detector current last)
+  (cond ((and (>= current 0) (< last 0)) 1)
+        ((and (< current 0) (>= last 0)) -1)
+        (else 0)))
+
+(define (make-zero-crossings input-stream last-value)
+  (cons-stream
+   (sign-change-detector (stream-car input-stream) last-value)
+   (delay (make-zero-crossings (stream-cdr input-stream)
+                        (stream-car input-stream)))))
+
+(define sense-data (stream-list (list 1 2 1.5 1 0.5 -0.1 -2 -3 -2 -0.5 0.2 3 4)))
+(define zero-crossings (make-zero-crossings sense-data 0))
+
+(define zero-crossings 
+  (stream-map sign-change-detector sense-data (cons-stream 0 (delay sense-data))))
+
+(n-display-stream zero-crossings 10)
