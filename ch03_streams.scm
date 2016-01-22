@@ -472,4 +472,16 @@
 (define zero-crossings 
   (stream-map sign-change-detector sense-data (cons-stream 0 (delay sense-data))))
 
-(n-display-stream zero-crossings 10)
+;(n-display-stream zero-crossings 10)
+
+;ex 3.75
+
+(define (make-zero-crossings input-stream last-value last-avpt)
+  (let ((avpt (/ (+ (stream-car input-stream) last-value) 2)))
+    (cons-stream (sign-change-detector avpt last-avpt)
+                 (delay (make-zero-crossings (stream-cdr input-stream)
+                                             (stream-car input-stream)
+                                             avpt)))))
+
+(define sense-data (stream-list (list 1 2 1.5 1 0.5 -0.1 -2 -3 -2 -0.5 0.2 3 4)))
+(define zero-crossings (make-zero-crossings sense-data 0 0))
