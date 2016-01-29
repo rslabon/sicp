@@ -552,3 +552,16 @@
   y)
 
 (stream-ref (solve-2nd 1 1 0.001 2 2) 100)
+
+;;ex 3.79
+
+(define (solve-2nd f y0 dy0 dt)
+  (define dy (integral (delay (force ddy)) dy0 dt))
+  (define y (integral (delay dy) y0 dt))
+  (define ddy (delay (f dy y)))
+  y)
+
+(define (ddy dy y) 
+  (add-streams (stream-scale dy 2)
+	       (stream-scale y 2)))
+(stream-ref (solve-2nd ddy 1 1 0.001) 100)
