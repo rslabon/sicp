@@ -565,3 +565,16 @@
   (add-streams (stream-scale dy 2)
 	       (stream-scale y 2)))
 (stream-ref (solve-2nd ddy 1 1 0.001) 100)
+
+;;ex 3.80
+
+(define (RLC R L C vC0 iL0 dt)
+  (define vC (integral (delay (stream-scale iL (/ -1 C))) vC0 dt))
+  (define iL (integral (delay (force diL)) iL0 dt))
+  (define diL (delay (add-streams (stream-scale iL (/ (* -1 R) L))
+				  (stream-scale vC (/ 1 L)))))
+  (cons vC iL))
+
+(define x (RLC 1 1 0.2 10 0 0.1))
+(stream-ref (car x) 10)
+(stream-ref (cdr x) 10)
