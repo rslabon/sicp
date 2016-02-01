@@ -578,3 +578,33 @@
 (define x (RLC 1 1 0.2 10 0 0.1))
 (stream-ref (car x) 10)
 (stream-ref (cdr x) 10)
+
+;;ex 3.81
+
+(define random-init 19)
+(define (rand-update x)
+  (let ((a 3)
+	(b 1)
+	(m 10))
+    (+ (* a x) (modulo b m))))
+
+(rand-update 19)
+
+(define (random-num-gen stream)
+  (define (create value s)
+    (cons-stream value
+		 (delay (next value s))))
+  (define (next value s)
+    (cond ((stream-null? s)
+	   the-empty-stream)
+	  ((eq? (stream-car s) 'reset)
+	   (create random-init (stream-cdr s)))
+	  ((eq? (stream-car s) 'generate)
+	   (create (rand-update value) (stream-cdr s)))
+	  (else (error "error!"))))
+  (create random-init stream))
+
+(define seq-stream (stream-list (list 'generate 'generate 'reset 'generate)))
+(define random-numbers (random-num-gen seq-stream))
+(n-display-stream random-numbers 4)
+      
