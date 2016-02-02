@@ -608,3 +608,38 @@
 (define random-numbers (random-num-gen seq-stream))
 (n-display-stream random-numbers 4)
       
+;;ex 3.82
+(define (estimate-integral pred x1 x2 y1 y2)
+
+  (define (random-in-range low high)
+    (let ((range (- high low)))
+      (+ low (random range))))
+
+  (define (monte-carlo experiment-stream passed failed)
+    (define (next passed failed)
+      (cons-stream
+       (/ passed (+ passed failed))
+       (delay (monte-carlo
+	       (stream-cdr experiment-stream) passed failed))))
+    (if (stream-car experiment-stream)
+	(next (+ passed 1) failed)
+	(next passed (+ failed 1))))
+
+  (define (points-stream)
+    (cons-stream (pred (random-in-range x1 x2)
+		       (random-in-range y1 y2))
+		 (delay (points-stream))))
+
+  (define exp-stream (monte-carlo (points-stream) 0 0))
+
+  (define area (* (- x2 x1) (- y2 y1)))
+
+  (stream-scale exp-stream area))
+
+(define (within-circle? x y)
+    (let ((left-side (+ (square (- x 5)) (square (- y 7))))
+	  (right-side (square 3)))
+      (or (< left-side right-side) (= left-side right-side))))
+
+(stream-ref (estimate-integral within-circle? 2 8 4 10) 1000)
+
