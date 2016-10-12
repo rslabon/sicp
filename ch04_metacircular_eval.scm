@@ -14,6 +14,8 @@
         ((begin? exp) 
          (eval-sequence (begin-actions exp) env))
         ((cond? exp) (eval (cond->if exp) env))
+        ((and? exp) (eval-and exp env))
+        ((or? exp) (eval-or exp env))
         ((application? exp)
          (apply (eval (operator exp) env)
                 (list-of-values (operands exp) env)))
@@ -360,6 +362,10 @@
         (list '- -)
         (list '/ /)
         (list '* *)
+        (list '= =)
+        (list '> >)
+        (list '< <)
+        (list 'eq? eq?)
         ))
 (define (primitive-procedure-names)
   (map car
@@ -409,4 +415,35 @@
       (display object)))
 
 (define the-global-environment (setup-environment))
+
+;; ex 4.4
+
+(define (and? exp) (tagged-list? exp 'and))
+(define (and-predicates exp) (cdr exp))
+(define (eval-and exp env)
+  (define (loop predicates)
+    (let ((result (eval (car predicates) env)))
+      (if (false? result)
+          'false
+          (if (null? (cdr predicates))
+              result
+              (loop (cdr predicates))))))
+  (if (null? (and-predicates exp))
+      'true
+      (loop (and-predicates exp))))
+
+(define (or? exp) (tagged-list? exp 'or))
+(define (or-predicates exp) (cdr exp))
+(define (eval-or exp env)
+  (define (loop predicates)
+    (let ((result (eval (car predicates) env)))
+      (if (true? result)
+          result
+          (if (null? (cdr predicates))
+              'false
+              (loop (cdr predicates))))))
+  (if (null? (and-predicates exp))
+      'true
+      (loop (and-predicates exp))))
+
 (driver-loop)
